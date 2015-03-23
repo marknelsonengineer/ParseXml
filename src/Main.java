@@ -4,7 +4,7 @@ import javax.xml.stream.XMLStreamReader;
 import java.io.FileInputStream;
 
 /**
- * Parse the National Vulnerability Database.
+ * Mine data from the National Vulnerability Database.
  */
 public class Main {
 
@@ -18,8 +18,6 @@ public class Main {
 
   /** True if printing debug statements. */
   public static final Boolean DEBUG = false;
-
-  private static int iCountEntries = 0;
 
   /**
    * Program entrypoint.
@@ -46,10 +44,10 @@ public class Main {
           switch (element) {
             case "entry":
               entry = new Entry();
-              entry.cveId = reader.getAttributeValue("", "id");
+              entry.setCveId(reader.getAttributeValue("", "id"));
               break;
             case "cwe":
-              entry.xxxx.add(reader.getAttributeValue("", "id"));
+              entry.setClassification(reader.getAttributeValue("", "id"));
               if (DEBUG) {
                 System.out.printf("cwe: [%s]\n", reader.getAttributeValue("", "id"));
               }
@@ -89,7 +87,7 @@ public class Main {
               break;
             case "product":
               reader.next();
-              entry.products.add(new Product(reader.getText().trim()));
+              entry.setProduct(reader.getText().trim());
               break;
             case "published-datetime":
               reader.next();
@@ -112,8 +110,11 @@ public class Main {
           element = reader.getLocalName();
           switch (element) {
             case "entry":
-              iCountEntries++;
-              entry.dump();
+              if (entry.isInteresting()) {
+                entry.summarizeCounters();
+                entry.dump();
+              }
+
               break;
             default:
               if (DEBUG) {
@@ -132,6 +133,8 @@ public class Main {
 
     }
 
-    System.out.printf("Done parsing %d entries\n", iCountEntries);
+    Entry.dumpCounters();
+
+    System.out.printf("Done parsing entries\n");
   }
 }
